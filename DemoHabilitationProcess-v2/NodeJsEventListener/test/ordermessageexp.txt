@@ -1,0 +1,9 @@
+{
+ "id":"1234AZE",
+ "businessKey":"TestMultipleHabil",
+ "payload":{
+            "orderId":1123,
+	    "uid":"XP5619",	
+            "profiles":"gtf_compta,sap_compta"
+           }
+}
