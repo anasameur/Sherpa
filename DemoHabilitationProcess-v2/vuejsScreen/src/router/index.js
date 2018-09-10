@@ -93,6 +93,15 @@ const router = new Router({
           },
         },
         {
+          path: 'status',
+          name: 'status',
+          component: () => import('@/pages/habillitationstatus.vue'),
+          meta: {
+            title: 'Habilitation status',
+            icon: 'assignment',
+          },
+        },
+        {
           path: 'help',
           name: 'help',
           component: () => import('@/pages/contacts.vue'),

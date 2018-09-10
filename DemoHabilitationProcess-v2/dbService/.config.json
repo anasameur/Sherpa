@@ -1,0 +1,14 @@
+{
+    "server": {
+        "hostname": "localhost",
+        "port": 3002,
+        "sslport": 8453,
+        "framework": "express",
+        "environment": "NodeJs"
+    },
+    "oracledb": {
+        "user": "Sherpa",
+        "password": "overthetop",
+        "connectString": "dcqexa211.d70.tes.local:1535/BPMDEV01.Cofely"
+    }
+}

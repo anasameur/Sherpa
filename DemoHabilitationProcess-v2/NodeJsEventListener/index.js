@@ -5,6 +5,7 @@ const amqp = require('amqplib/callback_api');
 var q_order = 'order';
 var q_complete = 'request_complet';
 var msg_count = 0;
+var flag = 0;
 
 amqp.connect(
   'amqp://localhost',
@@ -19,7 +20,11 @@ amqp.connect(
       console.log(
         ' [*] Waiting for order and completed messages. To exit press CTRL+C'
       );
-      //ch.assertQueue(q_order);
+
+      //setting the maximum number of messages sent over the channel
+      //that can be awaiting acknowledgement;
+      ch.prefetch(1);
+
       ch.consume(q_order, function(msg) {
         if (msg !== null) {
           var message = JSON.parse(msg.content.toString());
@@ -37,6 +42,7 @@ amqp.connect(
                 orderId: { value: order.orderId, type: 'String' },
                 uid: { value: order.uid, type: 'String' },
                 profiles: { value: order.profiles, type: 'String' },
+                desc: { value: order.desc, type: 'String' },
               },
             },
           })
@@ -51,11 +57,12 @@ amqp.connect(
             });
         }
       });
-      //ch.assertQueue(q_complete);
-      ch.consume(q_complete, function(msg) {
+
+      ch.consume(q_complete, async function(msg) {
         if (msg !== null) {
           var message = JSON.parse(msg.content.toString());
           var order = message.payload;
+
           console.log(
             " [%d] %s: '%s'",
             msg_count,
@@ -63,26 +70,35 @@ amqp.connect(
             msg.content.toString()
           );
           msg_count++;
-          ch.ack(msg);
+
+          var processVariables = {};
+          processVariables[order.profile + '_Status'] = {
+            value: order.status,
+            type: 'String',
+          };
+
           axios({
             method: 'post',
             url: 'http://localhost:8080/engine-rest/message',
             data: {
               messageName: 'RequestExecutedEvent',
               processInstanceId: message.trace_id,
-              processVariables: {
-                status: { value: order.status, type: 'String' },
+              localCorrelationKeys: {
+                MatchProfille: { value: order.profile, type: 'String' },
               },
+              processVariables: processVariables,
             },
           })
             .then(function(response) {
+              ch.ack(msg);
               console.log(
-                ' corellation completed message resp status: ',
+                ' Corellation completed message resp status: ',
                 response.status
               );
             })
             .catch(function(err) {
-              console.log('Error', err.response.data);
+              ch.ack(msg);
+              console.log('Error correlation message\n', err.response.data);
             });
         }
       });
